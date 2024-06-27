@@ -1,13 +1,11 @@
-
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcryptjs');
 const User = require('../models/user.model');
 const Bio = require('../models/bio.model');
-const verifyToken = require('../middleware/auth')
 
 require('dotenv').config();
 
-// Function to generate temporary password (for example purposes)
 const generatePassword = (firstname, lastname, email, number) => {
     const part1 = firstname.charAt(0);
     const part2 = lastname.slice(-1);
@@ -26,7 +24,10 @@ const registerUser = async (req, res) => {
 
         const randomPassword = generatePassword(firstname, lastname, email, number);
 
-        const newUser = new User({ firstname, lastname, email, number, tempPassword: randomPassword, password: randomPassword });
+        // Hash the generated password
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+        const newUser = new User({ firstname, lastname, email, number, password: hashedPassword });
         await newUser.save();
 
         // Send registration email
@@ -60,29 +61,25 @@ const registerUser = async (req, res) => {
     }
 };
 
-// Login endpoint
 const login = async (req, res) => {
     const { firstname, password } = req.body;
 
     try {
-        // Check if user exists
         const user = await User.findOne({ firstname });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        // Compare provided password with stored password
-        if (password !== user.password) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Create JWT token
         const payload = {
             user: {
                 id: user._id,
                 firstname: user.firstname,
                 email: user.email
-                // Add more data to the token payload if needed
             }
         };
 
@@ -96,8 +93,6 @@ const login = async (req, res) => {
     }
 };
 
-
-// Create biography
 const createBio = async (req, res) => {
     const { content } = req.body;
 
@@ -111,10 +106,6 @@ const createBio = async (req, res) => {
         console.error('Error creating biography:', error);
         res.status(500).json({ error: 'An error occurred while creating biography' });
     }
-};
-
-module.exports = {
-    createBio
 };
 
 module.exports = {

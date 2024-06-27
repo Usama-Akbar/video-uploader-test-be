@@ -2,17 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const connectToMongo = require('./utils/db');
 const userRouter = require('./routes/user.route');
-const videoRouter = require('./routes/uploadvideo.route'); // Corrected import path
+const videoRouter = require('./routes/uploadvideo.route'); 
 const app = express();
 const path = require('path');
-const port = 4000;
+const port = process.env.PORT || 4000; // Use the port from .env or default to 4000
 
 app.use(express.json());
 app.use(cors());
 
 connectToMongo();
 
-// Serve static files from the 'uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Use userRouter for handling user routes

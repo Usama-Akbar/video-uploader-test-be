@@ -1,6 +1,7 @@
-// middleware/upload.js
+
 
 const multer = require('multer');
+const path = require('path');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -17,8 +18,10 @@ const fileFilter = (req, file, cb) => {
         cb(null, true);
     } else if (file.fieldname === 'video' && file.mimetype === 'video/mp4') {
         cb(null, true);
+    } else if (file.fieldname === 'dp' && file.mimetype === 'image/jpeg') {
+        cb(null, true);
     } else {
-        cb(new Error('Invalid file type. Only JPEG images for thumbnail and MP4 videos are allowed.'), false);
+        cb(new Error('Invalid file type. Only JPEG images for thumbnail, DP, and MP4 videos are allowed.'), false);
     }
 };
 
@@ -31,3 +34,5 @@ const upload = multer({
 });
 
 module.exports = upload;
+
+
